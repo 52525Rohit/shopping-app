@@ -1,119 +1,33 @@
-import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
-import { ThemeProvider } from "./context/ThemeContext";
-import { AuthProvider } from "./context/AuthContext";
-import Navbar from "./components/Navbar";
-import CartDrawer from "./components/CartDrawer";
-import Shop from "./pages/Shop";
+import { useState, useEffect } from "react";
+import Navbar from "./Components";
+import Home from "./pages/Home";
+import Collection from "./pages/Collection";
 import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
-import Orders from "./pages/Orders";
-import Wishlist from "./pages/Wishlist";
-import Profile from "./pages/Profile";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminProducts from "./pages/admin/Products";
-import AdminOrders from "./pages/admin/Orders";
-import AdminUsers from "./pages/admin/Users";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
 
-function App() {
+export default function App() {
+  const [page, setPage] = useState("home");
+  const [cartCount, setCartCount] = useState(2);
+
+  const navigate = (target) => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => setPage(target), 150);
+  };
+
   useEffect(() => {
-    if (
-      localStorage.theme === "dark" ||
-      (!("theme" in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
+    window.scrollTo(0, 0);
+  }, [page]);
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <Navbar />
-            <CartDrawer />
-            <Routes>
-              <Route path="/" element={<Shop />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <ProtectedRoute>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/wishlist"
-                element={
-                  <ProtectedRoute>
-                    <Wishlist />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <AdminDashboard />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/products"
-                element={
-                  <AdminRoute>
-                    <AdminProducts />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/orders"
-                element={
-                  <AdminRoute>
-                    <AdminOrders />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <AdminRoute>
-                    <AdminUsers />
-                  </AdminRoute>
-                }
-              />
-            </Routes>
-            <Toaster position="top-right" />
-          </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+    <div className="min-h-screen bg-[#0c0c0c]">
+      <Navbar currentPage={page} onNavigate={navigate} cartCount={cartCount} />
+
+      <div key={page} style={{ animation: "fadeIn 0.4s ease forwards" }}>
+        {page === "home" && <Home onNavigate={navigate} />}
+        {page === "collection" && <Collection onNavigate={navigate} />}
+        {page === "product" && <ProductDetail onNavigate={navigate} />}
+        {page === "checkout" && <Checkout onNavigate={navigate} />}
+      </div>
+    </div>
   );
 }
-
-export default App;

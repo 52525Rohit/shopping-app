@@ -1,173 +1,229 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  FaShoppingCart,
-  FaHeart,
-  FaUser,
-  FaSun,
-  FaMoon,
-  FaBars,
-} from "react-icons/fa";
+import { ShoppingBag, Heart, User, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
 
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import useCartStore from "../store/cartStore";
-import AuthModal from "./AuthModal";
+export default function Navbar({ currentPage, onNavigate, cartCount }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  useEffect(() => {
+    let lastState = false;
 
-  const { user, logout } = useAuth();
-  const { darkMode, toggleDarkMode } = useTheme();
+    const handleScroll = () => {
+      const nextState = window.scrollY > 80;
 
-  // ✅ FIXED ZUSTAND SELECTOR
-  const cartItemsCount = useCartStore((state) => state.getCount());
+      if (nextState !== lastState) {
+        lastState = nextState;
+        setScrolled(nextState);
+      }
+    };
 
-  const navigate = useNavigate();
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
-  const navLinks = [
-    { name: "Shop", path: "/" },
-    ...(user?.role === "admin" ? [{ name: "Admin", path: "/admin" }] : []),
-  ];
-
-  const handleLogout = () => {
-    logout();
-    setIsOpen(false);
-    navigate("/");
-  };
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
-    <>
-      <nav className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            {/* LEFT SIDE */}
-            <div className="flex items-center">
-              {/* LOGO */}
-              <Link to="/" className="flex items-center">
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  ShopHub
-                </span>
-              </Link>
-
-              {/* DESKTOP NAV */}
-              <div className="hidden md:flex md:ml-6 md:space-x-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className="text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* RIGHT SIDE */}
-            <div className="flex items-center space-x-4">
-              {/* DARK MODE */}
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              >
-                {darkMode ? (
-                  <FaSun className="text-yellow-500 text-xl" />
-                ) : (
-                  <FaMoon className="text-gray-700 dark:text-gray-200 text-xl" />
-                )}
-              </button>
-
-              {/* WISHLIST */}
-              <Link
-                to="/wishlist"
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              >
-                <FaHeart className="text-gray-700 dark:text-gray-200 text-xl" />
-              </Link>
-
-              {/* CART */}
-              <button
-                onClick={() => useCartStore.getState().toggleCart()}
-                className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              >
-                <FaShoppingCart className="text-gray-700 dark:text-gray-200 text-xl" />
-
-                {cartItemsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartItemsCount}
-                  </span>
-                )}
-              </button>
-
-              {/* USER */}
-              {user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                  >
-                    <FaUser className="text-gray-700 dark:text-gray-200" />
-
-                    <span className="text-sm text-gray-700 dark:text-gray-200">
-                      {user.name}
-                    </span>
-                  </button>
-
-                  {/* DROPDOWN */}
-                  {isOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700 py-1 z-50">
-                      <Link
-                        to="/profile"
-                        onClick={() => setIsOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        Profile
-                      </Link>
-
-                      <Link
-                        to="/orders"
-                        onClick={() => setIsOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        Orders
-                      </Link>
-
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-                >
-                  Login
-                </button>
-              )}
-
-              {/* MOBILE MENU */}
-              <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                <FaBars className="text-gray-700 dark:text-gray-200 text-xl" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* AUTH MODAL */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+    <header
+      className={`
+    fixed top-0 left-0 right-0 z-50
+    transition-[background-color,box-shadow]
+    duration-700
+    ease-[cubic-bezier(0.22,1,0.36,1)]
+    ${
+      scrolled
+        ? "bg-black/75 shadow-[0_8px_40px_rgba(0,0,0,0.45)]"
+        : "bg-transparent shadow-none"
+    }
+  `}
+    >
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[1px] bg-white/10 pointer-events-none"
+        style={{
+          transitionProperty: "opacity, transform",
+          transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          transitionDuration: "500ms",
+          opacity: scrolled ? 1 : 0,
+          transform: scrolled ? "scaleX(1)" : "scaleX(0.95)",
+        }}
       />
-    </>
-  );
-};
 
-export default Navbar;
+      {/* Increased height layout to h-24 (96px) */}
+      <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+        {/* Left: Logo */}
+        <div className="flex-1 flex justify-start">
+          <button
+            onClick={() => onNavigate("home")}
+            className="font-serif text-xl md:text-2xl font-light tracking-wider text-white hover:text-accent"
+            style={{
+              transitionProperty: "all",
+              transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+              transitionDuration: "300ms",
+            }}
+          >
+            Bharat Bazaar{" "}
+          </button>
+        </div>
+
+        {/* Center: Main Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-12 justify-center">
+          <button
+            onClick={() => onNavigate("home")}
+            className="text-xs uppercase tracking-[0.25em] pb-1.5 border-b-2"
+            style={{
+              transitionProperty: "all",
+              transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+              transitionDuration: "300ms",
+              color:
+                currentPage === "home"
+                  ? "var(--color-accent, #5eead4)"
+                  : "#d4d4d4",
+              borderColor:
+                currentPage === "home"
+                  ? "var(--color-accent, #5eead4)"
+                  : "transparent",
+            }}
+          >
+            New
+          </button>
+
+          <button
+            onClick={() => onNavigate("collection")}
+            className="text-xs uppercase tracking-[0.25em] pb-1.5 border-b-2"
+            style={{
+              transitionProperty: "all",
+              transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+              transitionDuration: "300ms",
+              color:
+                currentPage === "collection"
+                  ? "var(--color-accent, #5eead4)"
+                  : "#d4d4d4",
+              borderColor:
+                currentPage === "collection"
+                  ? "var(--color-accent, #5eead4)"
+                  : "transparent",
+            }}
+          >
+            Shop
+          </button>
+
+          <button
+            onClick={() => onNavigate("collection")}
+            className="text-xs uppercase tracking-[0.25em] text-neutral-300 hover:text-white pb-1.5 border-b-2 border-transparent"
+            style={{
+              transitionProperty: "all",
+              transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+              transitionDuration: "300ms",
+            }}
+          >
+            Collections
+          </button>
+        </nav>
+
+        {/* Right: Functional Icons */}
+        <div className="flex-1 flex items-center justify-end gap-6">
+          <button
+            className="text-neutral-400 hover:text-white p-1"
+            style={{ transition: "color 300ms cubic-bezier(0.4, 0, 0.2, 1)" }}
+          >
+            <User size={19} strokeWidth={1.5} />
+          </button>
+
+          <button
+            className="text-neutral-400 hover:text-white p-1"
+            style={{ transition: "color 300ms cubic-bezier(0.4, 0, 0.2, 1)" }}
+          >
+            <Heart size={19} strokeWidth={1.5} />
+          </button>
+
+          <button
+            onClick={() => onNavigate("checkout")}
+            className="text-neutral-400 hover:text-white p-1 relative"
+            style={{ transition: "color 300ms cubic-bezier(0.4, 0, 0.2, 1)" }}
+          >
+            <ShoppingBag size={19} strokeWidth={1.5} />
+
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-accent text-[#0c0c0c] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          {/* Mobile Collapse Menu Button Trigger */}
+          <button
+            className="md:hidden text-neutral-400 hover:text-white p-1"
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{ transition: "color 300ms cubic-bezier(0.4, 0, 0.2, 1)" }}
+          >
+            {menuOpen ? (
+              <X size={22} strokeWidth={1.5} />
+            ) : (
+              <Menu size={22} strokeWidth={1.5} />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Panel Dropdown */}
+      <div
+        className="md:hidden overflow-hidden bg-black/90 backdrop-blur-lg relative"
+        style={{
+          transitionProperty: "all",
+          transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          transitionDuration: "400ms",
+          maxHeight: menuOpen ? "240px" : "0px",
+          opacity: menuOpen ? "1" : "0",
+        }}
+      >
+        {/* Secondary inner smooth border line for the mobile open drawer menu */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/5" />
+
+        <div className="flex flex-col px-8 py-6 gap-5">
+          <button
+            onClick={() => {
+              onNavigate("home");
+              setMenuOpen(false);
+            }}
+            className="text-xs uppercase tracking-[0.20em] text-left"
+            style={{
+              color:
+                currentPage === "home"
+                  ? "var(--color-accent, #5eead4)"
+                  : "#d4d4d4",
+            }}
+          >
+            New
+          </button>
+
+          <button
+            onClick={() => {
+              onNavigate("collection");
+              setMenuOpen(false);
+            }}
+            className="text-xs uppercase tracking-[0.20em] text-left"
+            style={{
+              color:
+                currentPage === "collection"
+                  ? "var(--color-accent, #5eead4)"
+                  : "#d4d4d4",
+            }}
+          >
+            Shop
+          </button>
+
+          <button
+            onClick={() => {
+              onNavigate("collection");
+              setMenuOpen(false);
+            }}
+            className="text-xs uppercase tracking-[0.20em] text-neutral-300 text-left"
+          >
+            Collections
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
